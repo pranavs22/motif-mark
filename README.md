@@ -2,13 +2,22 @@
 Thie repository contains Python code to visualize motifs
 
 About the script-
+• First converts multiline fasta to single line fasta for ease of precessing
+
 • Is compatible with Python3
+
 • Uses argparse
+
 • Accepts input as FASTA file and motifs file
+
 • Outputs single figure
+
 • Can handle multiple sequences and multiple motifs
+
 • Can handle ambiguous motifs 
+
 • Outputs svg image file
+
 • Key/labeling
 
 
@@ -22,4 +31,4 @@ It outputs a single vector-based image displaying all motifs present in the sequ
 
 ## Example Run Command
 
- python motif-3.py -f single_fasta.txt -m Fig_1_motifs.txt
+ python motif-3.py -f single_fasta.txt -m Fig_1_motifs.txt -o your/path/motifs
