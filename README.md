@@ -2,6 +2,7 @@
 Thie repository contains Python code to visualize motifs
 
 About the script-
+
 • First converts multiline fasta to single line fasta for ease of precessing
 
 • Is compatible with Python3
