@@ -32,4 +32,4 @@ It outputs a single vector-based image displaying all motifs present in the sequ
 
 ## Example Run Command
 
-python motif-3.py -f Figure_1.fasta -m Fig_1_motifs.txt -o C:/Bi624/motif-mark/motifs
+python motif.py -f Figure_1.fasta -m Fig_1_motifs.txt -o C:/Bi624/motif-mark/motif

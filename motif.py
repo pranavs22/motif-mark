@@ -12,35 +12,57 @@ import argparse
 import re
 import numpy as np
 import itertools
-import matplotlib.pyplot as plt
 import matplotlib as mpl
-#from multi_to_single_local import *
-# Parse the Fasta File
+
 def get_args():
     parser = argparse.ArgumentParser(description="Inputs to the script")
     parser.add_argument("-f", "--FILE", help="FASTA FILE", required=True, type = str)
     parser.add_argument("-m", "--MOTIF_FILE", help="MOTIFs FILE", required=True, type = str)
+    parser.add_argument("-o", "--OUTFILE", help="OUTPUT IMAGE FILE", required=True, type = str)
+
     return parser.parse_args()
 
 args = get_args()
 Fasta=args.FILE
 motifs=args.MOTIF_FILE
+out=args.OUTFILE
+
 #outfile='C:/Bi624/motif-mark/single_fasta.txt'
 #parse_fasta(Fasta,outfile)
 global context 
 global x
-#yy=gcaug=catag=ygcy=0
-surface=cairo.SVGSurface("example.svg", 1000, 800)
+
+
+surface=cairo.SVGSurface(out+".svg", 1000, 800)
 context = cairo.Context(surface)
 rgb_colors={}
 
 for name , hex in mpl.colors.cnames.items():
     rgb_colors[name]=mpl.colors.to_rgb(hex)
 
-c=np.random.choice(list(rgb_colors.keys()),4)    
-
+single_dict={}
+def parse_fasta(Fasta):
+    with open(Fasta) as fa:
+            for line in fa:
+                line=line.strip()
+                if line.startswith(">"):
+                    header=line
+                    single_dict[header]=""
+                else:
+                    single_dict[header]+=line
+    single_fasta=out+"_single_fasta.fa"
+    with open(single_fasta,"w") as sfa:
+        for header,seq in single_dict.items():
+            sfa.write(header)
+            sfa.write("\n")
+            sfa.write(seq)
+            sfa.write("\n")
+    return single_fasta
 def parse_data(Fasta,motifs):
-
+    print("Creating Image...")
+    
+###Variabes and declaraations
+    single_fasta=parse_fasta(Fasta)
     
     motif_dict={'A':'[Aa]','T':'[TtUu]','G':'[Gg]','C':'[Cc]','U':'[TtUu]',
                 'Y':'[CcTtUu]','y':'[CcTtUu]','W':'[AaTtUu]','S':'[GgCc]', 
@@ -51,12 +73,11 @@ def parse_data(Fasta,motifs):
     m_motif=sequence=''
     motif_list=[]
     fasta={}
-    motif_back=seq_pos={}    
+    motif_back=seq_pos=motif_color={}    
     x=10
 
     context.move_to(100,10+x)
     context.show_text("Motif-Mark")
-#    context.set_font_size(0.5)
     context.move_to(750,10+x)
     context.show_text("Legend ")
     context.move_to(750,30+x)
@@ -64,8 +85,8 @@ def parse_data(Fasta,motifs):
     context.rectangle(740,x,160,150)
 
     context.stroke()            
-
-    with open (Fasta) as f,open(motifs) as m:
+##########Process file
+    with open (single_fasta) as f,open(motifs) as m:
         for line in f:
             if line.strip().startswith(">"):
                 header=line.strip()
@@ -75,9 +96,9 @@ def parse_data(Fasta,motifs):
                 sequence=line.strip()
                 fasta[header]=sequence
         motif=m.readlines()
-        
+        c=np.random.choice(list(rgb_colors.keys()),len(motif))    
         c_index=0
-        motif_color={}
+        
         for mot in motif:
             mot=mot.strip().upper()
 
@@ -109,10 +130,10 @@ def parse_data(Fasta,motifs):
             motif_back[m_motif]=mot
             m_motif=''
         c_index+=1
-#    print(motif_list)
-#    motif_seq={}
+
     exons=re.compile('[ATCG]+')
     seq=fasta.values()
+    
     comb=list(itertools.product(seq,motif_list))    
     x=20
     for header,seq in fasta.items():
@@ -121,34 +142,33 @@ def parse_data(Fasta,motifs):
         start=e.span()[0]
         stop=e.span()[1]
         x+=70
+#### Legend
         context.set_source_rgb(0,0,0)                  #Line color 
 
         context.move_to(50,10+x)
         context.show_text("Gene: "+ re.sub('>','',header)[:4]+"                          Location: "+re.sub('>','',header)[4:])
         context.stroke()            
 
-
-
-        context.move_to(1,25+x)    
+        context.move_to(40,25+x)    
         seq_pos[seq]=25+x       #1
-        context.line_to(len(seq),25+x)
+        context.line_to(len(seq)+40,25+x)
         context.set_line_width(1)
         context.set_source_rgb(0,0,0)                  #Line color 
         context.stroke()                                
 
         context.set_source_rgb(0,0,0)                  #Exon colour
-        context.rectangle(start,15+x,stop-start,20)
+        context.rectangle(start+40,15+x,stop-start,20)
         context.fill_preserve()
         context.stroke()    
 
 
 
 
-    x=20
+    x=60
     for info in comb:
         x+=8
-    
-        make_image(motif_back,info,seq_pos,x,motif_color)
+        
+        make_image(motif_back,info,seq_pos,x,motif_color,fasta)
     context.stroke()  
 ############################### Draw EXON
 #    print(motif)
@@ -156,21 +176,32 @@ def parse_data(Fasta,motifs):
     
     surface.finish()   
 #    print(seq_pos)
-    return 
-def make_image(motif_back,info,seq_pos,x,motif_color):
+    
+    return "Done" 
+def make_image(motif_back,info,seq_pos,x,motif_color,fasta):
+    motif_count={}
     motif=info[1] 
     seq=info[0] 
     sp=re.finditer(motif,seq.upper())
+    
+
     start=[i.start() for i in sp]
+    motif_count[motif_back[motif]]=0
+
     context.set_source_rgb(motif_color[motif_back[motif]][0],motif_color[motif_back[motif]][1],motif_color[motif_back[motif]][2])   
+    
     for i in start:
-        context.rectangle(i,seq_pos[seq]-10,4,20)
+        print(motif_back[motif],i)
+#        print(motif_back[motif],seq)
+        motif_count[motif_back[motif]]+=1
+        context.rectangle(i+40,seq_pos[seq]-10,4,20)
         context.fill()
         context.stroke()
-    return motif_back
-
     
-    
+    for k,v in fasta.items():
+        if v==seq:
+            print(k,motif_count)
+                
 
+    return motif_count
 print(parse_data(Fasta,motifs))
-    
