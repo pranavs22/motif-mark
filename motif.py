@@ -191,7 +191,6 @@ def make_image(motif_back,info,seq_pos,x,motif_color,fasta):
     context.set_source_rgb(motif_color[motif_back[motif]][0],motif_color[motif_back[motif]][1],motif_color[motif_back[motif]][2])   
     
     for i in start:
-        print(motif_back[motif],i)
 #        print(motif_back[motif],seq)
         motif_count[motif_back[motif]]+=1
         context.rectangle(i+40,seq_pos[seq]-10,4,20)
